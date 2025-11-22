@@ -1,7 +1,21 @@
+using Microsoft.Extensions.DependencyInjection;
+using Servicios.Interfaz;
+using Servicios;
+using Servicios.DTOs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Configuración de EmailSettings desde appsettings.json
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddSingleton(sp =>
+{
+    var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailSettings>>().Value;
+    return new EmailService(settings);
+});
+builder.Services.AddSingleton<IEmailService>(sp => sp.GetRequiredService<EmailService>());
 
 var app = builder.Build();
 
