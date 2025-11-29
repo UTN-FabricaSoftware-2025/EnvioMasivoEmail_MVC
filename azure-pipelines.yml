@@ -6,45 +6,66 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  # precise path to your web project .csproj file
+  # Path to your web project
   webProject: 'EnvioMasivoEmail_MVC/EnvioMasivoEmail_MVC.csproj'
+  # Path to your sync console app
+  syncToolProject: 'AzureTestSyncApp/AzureTestSyncApp.csproj'
 
 steps:
-# 1. Restore dependencies for the Web App only
+# 1. Restore dependencies for ALL projects (Web + Console)
 - task: DotNetCoreCLI@2
-  displayName: 'Restore'
+  displayName: 'Restore All Dependencies'
   inputs:
     command: 'restore'
-    projects: '$(webProject)'
+    projects: '**/*.csproj'
 
-# 2. Build the Web App
+# 2. Build the Console App (Sync Tool)
 - task: DotNetCoreCLI@2
-  displayName: 'Build'
+  displayName: 'Build Sync Tool'
+  inputs:
+    command: 'build'
+    projects: '$(syncToolProject)'
+    arguments: '--configuration $(buildConfiguration)'
+
+# 3. EXECUTE the Console App to Sync Gherkin Files
+# This runs Program.cs which updates Azure DevOps Test Plans
+- task: DotNetCoreCLI@2
+  displayName: 'Run AzureTestSyncApp'
+  inputs:
+    command: 'run'
+    projects: '$(syncToolProject)'
+    arguments: '--configuration $(buildConfiguration)'
+  env:
+    # MAP PIPELINE VARIABLES TO C# ENVIRONMENT VARIABLES
+    # You must define 'MyAzurePAT' in your Pipeline Library/Variables
+    PERSONAL_ACCESS_TOKEN: $(MyAzurePAT) 
+    ORGANIZATION_URL: 'https://dev.azure.com/UTN-FabricaSoftware-2025'
+    PROJECT_NAME: 'CorreosMasivos'
+    PLAN_ID: '6'
+
+# 4. Build the Web App
+- task: DotNetCoreCLI@2
+  displayName: 'Build Web App'
   inputs:
     command: 'build'
     projects: '$(webProject)'
     arguments: '--configuration $(buildConfiguration)'
 
-# 3. Publish the Web App (creates the deployment zip)
+# 5. Publish the Web App (creates the deployment zip)
 - task: DotNetCoreCLI@2
-  displayName: 'Publish'
+  displayName: 'Publish Web App'
   inputs:
     command: 'publish'
     projects: '$(webProject)'
-    publishWebProjects: false # Set to false because we specified the project explicitly above
+    publishWebProjects: false 
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
     zipAfterPublish: true
 
-# 4. Deploy to Azure
+# 6. Deploy to Azure
 - task: AzureWebApp@1
   displayName: 'Azure Web App Deploy'
   inputs:
-    # Use the name you created in the "Service connections" step (e.g. AzureConnection)
     azureSubscription: 'AzureConnection' 
-    
     appType: 'webApp'
-    
-    # This is the value we found in your screenshot
     appName: 'correos-masivos' 
-    
     package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
