@@ -9,19 +9,21 @@ variables:
   webProject: 'EnvioMasivoEmail_MVC/EnvioMasivoEmail_MVC.csproj'
   syncToolProject: 'AzureTestSyncApp/AzureTestSyncApp.csproj'
   NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages
+  # OPTIMIZATION: Disable Telemetry and Logos for slightly faster CLI startup
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
 
 steps:
-# 1. Cache NuGet Packages (FIXED)
+# 1. Cache NuGet Packages
 - task: Cache@2
   displayName: 'Cache NuGet packages'
   inputs:
-    # CHANGED: Replaced 'packages.lock.json' with '**/*.csproj'
     key: 'nuget | "$(Agent.OS)" | **/*.csproj,!**/bin/**,!**/obj/**'
     restoreKeys: |
        nuget | "$(Agent.OS)"
     path: $(NUGET_PACKAGES)
 
-# 2. Restore dependencies for ALL projects
+# 2. Restore dependencies
 - task: DotNetCoreCLI@2
   displayName: 'Restore All Dependencies'
   inputs:
@@ -34,16 +36,14 @@ steps:
   inputs:
     command: 'build'
     projects: '$(syncToolProject)'
-    arguments: '--configuration $(buildConfiguration) --no-restore'
+    # OPTIMIZATION: Output to a known directory for direct execution
+    arguments: '--configuration $(buildConfiguration) --no-restore --output $(Build.BinariesDirectory)/SyncTool'
 
-# 4. EXECUTE the Console App
-- task: DotNetCoreCLI@2
-  displayName: 'Run AzureTestSyncApp'
-  inputs:
-    command: 'run'
-    projects: '$(syncToolProject)'
-    arguments: '--configuration $(buildConfiguration) --no-build'
-    workingDirectory: 'AzureTestSyncApp'
+# 4. EXECUTE the Console App (Directly, no "dotnet run" overhead)
+- script: |
+    dotnet "$(Build.BinariesDirectory)/SyncTool/AzureTestSyncApp.dll"
+  displayName: 'Run AzureTestSyncApp Direct'
+  workingDirectory: 'AzureTestSyncApp'
   env:
     PERSONAL_ACCESS_TOKEN: $(MyAzurePAT) 
     ORGANIZATION_URL: 'https://dev.azure.com/UTN-FabricaSoftware-2025'
