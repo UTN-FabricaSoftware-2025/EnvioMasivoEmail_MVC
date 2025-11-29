@@ -54,7 +54,7 @@ namespace AzureTestSyncApp
                 new GherkinTestJob
                 {
                     FeatureFilePath = "Features/LeerCorreosDesdeTxt.feature",
-                    SuiteId = 46,
+                    SuiteId = 40,
                     Type = TestType.TextFileEmail
                 },
 
@@ -62,7 +62,7 @@ namespace AzureTestSyncApp
                 new GherkinTestJob
                 {
                     FeatureFilePath = "Features/LecturaUsuariosExcel.feature", // Adjust path if needed
-                    SuiteId = 46, // Or whatever suite you want
+                    SuiteId = 40, // Or whatever suite you want
                     Type = TestType.ExcelUserImport
                 }
             };
