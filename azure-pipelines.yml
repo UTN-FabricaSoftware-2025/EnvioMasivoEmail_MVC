@@ -2,21 +2,21 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest' # Kept as Windows per your request
+  vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: 'Release'
   webProject: 'EnvioMasivoEmail_MVC/EnvioMasivoEmail_MVC.csproj'
   syncToolProject: 'AzureTestSyncApp/AzureTestSyncApp.csproj'
-  # Define a path for NuGet packages to enable caching
   NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages
 
 steps:
-# 1. Cache NuGet Packages (Crucial for Windows speed)
+# 1. Cache NuGet Packages (FIXED)
 - task: Cache@2
   displayName: 'Cache NuGet packages'
   inputs:
-    key: 'nuget | "$(Agent.OS)" | **/packages.lock.json,!**/bin/**,!**/obj/**'
+    # CHANGED: Replaced 'packages.lock.json' with '**/*.csproj'
+    key: 'nuget | "$(Agent.OS)" | **/*.csproj,!**/bin/**,!**/obj/**'
     restoreKeys: |
        nuget | "$(Agent.OS)"
     path: $(NUGET_PACKAGES)
@@ -34,7 +34,6 @@ steps:
   inputs:
     command: 'build'
     projects: '$(syncToolProject)'
-    # Added --no-restore so it uses the packages from Step 2
     arguments: '--configuration $(buildConfiguration) --no-restore'
 
 # 4. EXECUTE the Console App
@@ -43,8 +42,6 @@ steps:
   inputs:
     command: 'run'
     projects: '$(syncToolProject)'
-    # OPTIMIZATION: --no-build tells dotnet to assume the binary is ready. 
-    # This skips the "check for changes" phase.
     arguments: '--configuration $(buildConfiguration) --no-build'
     workingDirectory: 'AzureTestSyncApp'
   env:
@@ -53,17 +50,13 @@ steps:
     PROJECT_NAME: 'CorreosMasivos'
     PLAN_ID: '38'
 
-# REMOVED: "Build Web App" step. 
-# Reason: The "Publish" command below compiles the code anyway.
-
-# 5. Publish the Web App (Compiles & Zips)
+# 5. Publish the Web App
 - task: DotNetCoreCLI@2
   displayName: 'Publish Web App'
   inputs:
     command: 'publish'
     projects: '$(webProject)'
     publishWebProjects: false 
-    # OPTIMIZATION: --no-restore skips the restore check (we did it in step 2)
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --no-restore'
     zipAfterPublish: true
 
