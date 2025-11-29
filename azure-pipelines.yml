@@ -1,0 +1,50 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  # precise path to your web project .csproj file
+  webProject: 'EnvioMasivoEmail_MVC/EnvioMasivoEmail_MVC.csproj'
+
+steps:
+# 1. Restore dependencies for the Web App only
+- task: DotNetCoreCLI@2
+  displayName: 'Restore'
+  inputs:
+    command: 'restore'
+    projects: '$(webProject)'
+
+# 2. Build the Web App
+- task: DotNetCoreCLI@2
+  displayName: 'Build'
+  inputs:
+    command: 'build'
+    projects: '$(webProject)'
+    arguments: '--configuration $(buildConfiguration)'
+
+# 3. Publish the Web App (creates the deployment zip)
+- task: DotNetCoreCLI@2
+  displayName: 'Publish'
+  inputs:
+    command: 'publish'
+    projects: '$(webProject)'
+    publishWebProjects: false # Set to false because we specified the project explicitly above
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+
+# 4. Deploy to Azure
+- task: AzureWebApp@1
+  displayName: 'Azure Web App Deploy'
+  inputs:
+    # Use the name you created in the "Service connections" step (e.g. AzureConnection)
+    azureSubscription: 'AzureConnection' 
+    
+    appType: 'webApp'
+    
+    # This is the value we found in your screenshot
+    appName: 'correos-masivos' 
+    
+    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
