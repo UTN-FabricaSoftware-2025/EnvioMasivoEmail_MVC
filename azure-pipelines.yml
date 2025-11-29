@@ -32,10 +32,10 @@ steps:
   displayName: 'Run AzureTestSyncApp'
   inputs:
     command: 'run'
-    # CHANGE 1: Use only the filename, because we are already inside the folder
-    projects: 'AzureTestSyncApp.csproj'
+    # CHANGE THIS BACK: Use the variable (or the full path 'AzureTestSyncApp/AzureTestSyncApp.csproj')
+    projects: '$(syncToolProject)' 
     arguments: '--configuration $(buildConfiguration)'
-    # CHANGE 2: Set the working directory to the subfolder
+    # KEEP THIS: This ensures the app runs "inside" the folder
     workingDirectory: 'AzureTestSyncApp'
   env:
     PERSONAL_ACCESS_TOKEN: $(MyAzurePAT) 
