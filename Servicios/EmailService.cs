@@ -1,4 +1,4 @@
-﻿//Servicios/EmailService.cs
+//Servicios/EmailService.cs
 
 using MimeKit;
 using Servicios.DTOs;
@@ -77,11 +77,11 @@ namespace Servicios
                 try
                 {
                     await client.SendAsync(msg);
-                    logs.Add($"✔️ Enviado a {toEmail}");
+                    logs.Add($"Enviado exitosamente a {toEmail}");
                 }
                 catch (Exception ex)
                 {
-                    logs.Add($"❌ Error {toEmail}: {ex.Message}");
+                    logs.Add($"Error al enviar a {toEmail}: {ex.Message}");
                 }
             }
             await client.DisconnectAsync(true);

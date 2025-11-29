@@ -181,19 +181,20 @@
                         const li = document.createElement('li');
                         li.className = 'list-group-item';
 
-                        // Colorear y contar según el resultado
-                        if (log.includes('✓') || log.includes('exitosamente')) {
+                        // Colorear y contar segun el resultado
+                        const normalizedLog = log.toLowerCase();
+
+                        if (normalizedLog.includes('exitos') || normalizedLog.includes('enviado')) {
                             li.classList.add('list-group-item-success');
                             successCount++;
                             li.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> ${log}`;
-                        } else if (log.includes('✗') || log.includes('Error')) {
+                        } else if (normalizedLog.includes('error')) {
                             li.classList.add('list-group-item-danger');
                             errorCount++;
                             li.innerHTML = `<i class="bi bi-x-circle-fill text-danger"></i> ${log}`;
                         } else {
                             li.innerHTML = `<i class="bi bi-info-circle"></i> ${log}`;
                         }
-
                         logsList.appendChild(li);
                     });
 
