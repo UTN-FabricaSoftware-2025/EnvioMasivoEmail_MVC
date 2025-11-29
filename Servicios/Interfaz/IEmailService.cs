@@ -1,5 +1,8 @@
-﻿using Servicios.DTOs;
+﻿// Servicios/Interfaz/IEmailService.cs
+
+using Servicios.DTOs;
 using System;
+using MimeKit;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,5 +32,7 @@ namespace Servicios.Interfaz
             string bodyHtml, 
             List<AttachmentDto>? attachments // <--- Agrega el '?'
         );
+
+        string IncrustarBanner(BodyBuilder builder, string bodyHtml);
     }
 }

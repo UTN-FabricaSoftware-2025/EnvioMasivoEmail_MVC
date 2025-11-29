@@ -153,7 +153,7 @@ namespace Servicios
             return EmailFileHelper.LeerCorreosDesdeTxt(rutaTxt);
         }
 
-        private string IncrustarBanner(BodyBuilder builder, string bodyHtml)
+        public string IncrustarBanner(BodyBuilder builder, string bodyHtml)
         {
             // Definimos la ruta de la imagen
             var bannerPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas", "img2.jpg");

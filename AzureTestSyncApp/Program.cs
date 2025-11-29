@@ -1,4 +1,6 @@
-﻿#nullable disable
+﻿// AzureTestSyncApp/Program.cs
+
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -10,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.TeamFoundation.TestManagement.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
+using MimeKit;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.WebApi.Patch;
@@ -17,13 +20,15 @@ using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 using Servicios;
 using Servicios.Helpers;
 using Servicios.Interfaz;
+using Servicios.DTOs;
 
 namespace AzureTestSyncApp
 {
     public enum TestType
     {
         TextFileEmail, // The old Python logic
-        ExcelUserImport // The new C# Logic
+        ExcelUserImport,
+        BannerEmbedding
     }
 
     // 1. New Class to define a "Testing Job"
@@ -61,9 +66,9 @@ namespace AzureTestSyncApp
                 // 2. NEW EXCEL TEST (Integrated!)
                 new GherkinTestJob
                 {
-                    FeatureFilePath = "Features/LecturaUsuariosExcel.feature", // Adjust path if needed
-                    SuiteId = 40, // Or whatever suite you want
-                    Type = TestType.ExcelUserImport
+                    FeatureFilePath = "Features/IncrustarBannerEmail.feature", 
+                    SuiteId = 40, 
+                    Type = TestType.BannerEmbedding // <--- CHANGE THIS (It was ExcelUserImport in your snippet)
                 }
             };
 
@@ -473,7 +478,7 @@ namespace AzureTestSyncApp
                         else
                         {
                             finalOutcome = "Failed";
-                            string msg = $"❌ Row {i + 1} Failed. Expected: {expectedString} | Actual: {string.Join(",", actualListSorted)}";
+                            string msg = $"❌ Row {i + 1} Failed. Expected: {string.Join(",", actualListSorted)} | Actual: {expectedString}";
                             executionLog.Add(msg);
                             Console.WriteLine(msg); // <--- PRINT TO CONSOLE
                         }
@@ -506,6 +511,75 @@ namespace AzureTestSyncApp
                             string msg = $"❌ Row {i + 1} Failed: {reason}";
                             executionLog.Add(msg);
                             Console.WriteLine(msg); // <--- PRINT TO CONSOLE
+                        }
+                    }
+                    // ======================================================
+                    // STRATEGY 3: BANNER EMBEDDING (New Logic)
+                    // ======================================================
+                    else if (job.Type == TestType.BannerEmbedding)
+                    {
+                        // 1. Extract Gherkin Data
+                        string estadoArchivo = row.ContainsKey("estado_archivo") ? row["estado_archivo"] : "no existe";
+                        string inputHtml = row.ContainsKey("html_entrada") ? row["html_entrada"] : "";
+                        string expectedText = row.ContainsKey("texto_esperado") ? row["texto_esperado"] : "";
+                        int expectedCount = int.Parse(row.ContainsKey("adjuntos_count") ? row["adjuntos_count"] : "0");
+
+                        // 2. Setup Simulation Environment (File System)
+                        // The service looks for: wwwroot/Plantillas/img2.jpg relative to execution
+                        string wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Plantillas");
+                        string imgPath = Path.Combine(wwwRootPath, "img2.jpg");
+
+                        // Create directory if missing
+                        if (!Directory.Exists(wwwRootPath)) Directory.CreateDirectory(wwwRootPath);
+
+                        // Manipulate file existence based on test case
+                        if (estadoArchivo.ToLower() == "existe")
+                        {
+                            // Create a dummy file if it doesn't exist
+                            if (!File.Exists(imgPath)) File.WriteAllText(imgPath, "fake image content");
+                        }
+                        else
+                        {
+                            // Delete the file if it exists
+                            if (File.Exists(imgPath)) File.Delete(imgPath);
+                        }
+
+                        try
+                        {
+                            // 3. Execution
+                            // We pass empty settings because IncrustarBanner doesn't use SMTP
+                            IEmailService service = new EmailService(new EmailSettings()); 
+                            var builder = new BodyBuilder();
+
+                            // Run the method
+                            string resultHtml = service.IncrustarBanner(builder, inputHtml);
+
+                            // 4. Validation
+                            bool textCheck = resultHtml.Contains(expectedText);
+                            bool countCheck = builder.LinkedResources.Count == expectedCount;
+
+                            if (textCheck && countCheck)
+                            {
+                                string msg = $"✅ Row {i + 1} Passed";
+                                executionLog.Add(msg);
+                                Console.WriteLine(msg);
+                            }
+                            else
+                            {
+                                finalOutcome = "Failed";
+                                var errorDetails = new List<string>();
+                                if (!textCheck) errorDetails.Add($"Expected text '{expectedText}' not found in result.");
+                                if (!countCheck) errorDetails.Add($"Expected {expectedCount} attachments, found {builder.LinkedResources.Count}.");
+                                
+                                string msg = $"❌ Row {i + 1} Failed: {string.Join(" | ", errorDetails)}";
+                                executionLog.Add(msg);
+                                Console.WriteLine(msg);
+                            }
+                        }
+                        finally
+                        {
+                            // Cleanup: Ideally, remove the dummy file to leave environment clean
+                            if (File.Exists(imgPath)) File.Delete(imgPath);
                         }
                     }
                 }
