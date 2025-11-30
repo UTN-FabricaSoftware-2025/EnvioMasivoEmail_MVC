@@ -50,6 +50,8 @@ steps:
   inputs:
     command: 'restore'
     projects: '**/*.csproj'
+    feedsToUse: 'config'           # Le decimos que use un archivo config
+    nugetConfigPath: 'nuget.config' # La ruta al archivo que creaste
 
 # 4. Build the Console App (CONDITIONAL)
 - task: DotNetCoreCLI@2
