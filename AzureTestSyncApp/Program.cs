@@ -59,7 +59,7 @@ namespace AzureTestSyncApp
                 new GherkinTestJob
                 {
                     FeatureFilePath = "Features/LeerCorreosDesdeTxt.feature",
-                    SuiteId = 40,
+                    SuiteId = 65,
                     Type = TestType.TextFileEmail
                 },
 
@@ -67,7 +67,7 @@ namespace AzureTestSyncApp
                 new GherkinTestJob
                 {
                     FeatureFilePath = "Features/IncrustarBannerEmail.feature", 
-                    SuiteId = 40, 
+                    SuiteId = 66, 
                     Type = TestType.BannerEmbedding // <--- CHANGE THIS (It was ExcelUserImport in your snippet)
                 }
             };

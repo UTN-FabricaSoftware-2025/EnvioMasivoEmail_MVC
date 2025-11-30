@@ -72,7 +72,7 @@ steps:
     PERSONAL_ACCESS_TOKEN: $(MyAzurePAT) 
     ORGANIZATION_URL: 'https://dev.azure.com/UTN-FabricaSoftware-2025'
     PROJECT_NAME: 'CorreosMasivos'
-    PLAN_ID: '38'
+    PLAN_ID: '63'
 
 # 6. Publish the Web App (Always runs)
 - task: DotNetCoreCLI@2
