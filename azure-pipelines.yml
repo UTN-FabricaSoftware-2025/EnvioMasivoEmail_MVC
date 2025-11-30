@@ -84,6 +84,14 @@ steps:
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --no-restore'
     zipAfterPublish: true
 
+# NUEVO PASO: Subir el artifact para que aparezca el "1" en la interfaz
+- task: PublishBuildArtifacts@1
+  displayName: 'Upload Artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop' # Nombre de la carpeta que verás al descargar
+    publishLocation: 'Container'
+
 # 7. Deploy to Azure
 - task: AzureWebApp@1
   displayName: 'Azure Web App Deploy'
