@@ -86,6 +86,33 @@ steps:
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --no-restore'
     zipAfterPublish: true
 
+# 6.5. A: CREAR EL PAQUETE NUGET (PACK)
+- task: DotNetCoreCLI@2
+  displayName: 'Pack NuGet Package'
+  inputs:
+    command: 'pack'
+    # Asegúrate de apuntar al proyecto que tiene el <IsPackable>true
+    projects: 'EnvioMasivoEmail_MVC/EnvioMasivoEmail_MVC.csproj'
+    # Esto genera versiones automáticas tipo 1.0.543, 1.0.544
+    versioningScheme: 'byPrereleaseNumber' 
+    majorVersion: '1'
+    minorVersion: '0'
+    patchVersion: '$(Build.BuildId)'
+    # Guardamos el paquete en una carpeta temporal para subirlo luego
+    outputDir: '$(Build.ArtifactStagingDirectory)/nuget'
+
+# 6.5. B: SUBIR AL FEED (PUSH)
+- task: NuGetCommand@2
+  displayName: 'Push NuGet to Feed'
+  inputs:
+    command: 'push'
+    # Busca los archivos .nupkg en la carpeta donde los creamos arriba
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/nuget/*.nupkg;!$(Build.ArtifactStagingDirectory)/nuget/*.symbols.nupkg'
+    nuGetFeedType: 'internal'
+    # Aquí va el nombre de tu feed tal como sale en la URL de tu imagen
+    publishVstsFeed: 'UTN-FabricaSoftware-2025'
+    allowPackageConflicts: true
+
 # NUEVO PASO: Subir el artifact para que aparezca el "1" en la interfaz
 - task: PublishBuildArtifacts@1
   displayName: 'Upload Artifacts'
