@@ -316,21 +316,31 @@ namespace AzureTestSyncApp
 
             if (existingId.HasValue)
             {
+                // LOGIC FOR EXISTING TEST CASE
                 patchDocument.Add(new JsonPatchOperation { Operation = Operation.Replace, Path = "/fields/Microsoft.VSTS.TCM.Steps", Value = xmlSteps });
                 patchDocument.Add(new JsonPatchOperation { Operation = Operation.Replace, Path = "/fields/Microsoft.VSTS.TCM.LocalDataSource", Value = datasourceXml });
                 patchDocument.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.Tags", Value = "Gherkin Updated" });
+
+                // ---> NEW LINE ADDED HERE: Force state to Ready
+                patchDocument.Add(new JsonPatchOperation { Operation = Operation.Replace, Path = "/fields/System.State", Value = "Ready" }); 
+
                 await _witClient.UpdateWorkItemAsync(patchDocument, existingId.Value);
-                Console.WriteLine($"✅ Test Case Actualizado: {existingId}");
+                Console.WriteLine($"✅ Test Case Actualizado (Ready): {existingId}");
             }
             else
             {
+                // LOGIC FOR NEW TEST CASE
                 patchDocument.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.Title", Value = title });
                 patchDocument.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/Microsoft.VSTS.TCM.Steps", Value = xmlSteps });
                 patchDocument.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/Microsoft.VSTS.TCM.LocalDataSource", Value = datasourceXml });
                 patchDocument.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.Tags", Value = "Gherkin Fixed" });
+
+                // ---> NEW LINE ADDED HERE: Set initial state to Ready
+                patchDocument.Add(new JsonPatchOperation { Operation = Operation.Add, Path = "/fields/System.State", Value = "Ready" });
+
                 var workItem = await _witClient.CreateWorkItemAsync(patchDocument, _projectName, "Test Case");
                 existingId = workItem.Id;
-                Console.WriteLine($"✅ Test Case Creado: {existingId}");
+                Console.WriteLine($"✅ Test Case Creado (Ready): {existingId}");
             }
             return existingId;
         }
