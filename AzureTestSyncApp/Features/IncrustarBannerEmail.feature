@@ -20,4 +20,4 @@ Feature: Incrustación de Banner en HTML de Correo
       | estado_archivo | html_entrada                     | texto_esperado           | adjuntos_count | Notas                                                                                                |
       | existe         | <div>{{img2}}</div>              | <img src="cid:           | 1              | ESCENARIO A (Camino Feliz): Imagen existe, se reemplaza el token por CID y se adjunta al Builder.    |
       | no existe      | <div>{{img2}}</div>              | IMG no encontrada        | 0              | ESCENARIO B (Imagen Falta): No existe archivo, se reemplaza token por texto error. Nada se adjunta.  |
-      | existe         | <h1>Hola Mundo</h1>              | <h1>Hola Mundo</h1>      | 1              | ESCENARIO C (Sin Token): Imagen existe y se adjunta (desperdicio), pero HTML no cambia al no tener {{img2}}. |
+      | existe         | <h1>Hola Mundo</h1>              | <h1>Hola M</h1>      | 1              | ESCENARIO C (Sin Token): Imagen existe y se adjunta (desperdicio), pero HTML no cambia al no tener {{img2}}. |
